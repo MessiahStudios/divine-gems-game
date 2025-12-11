@@ -11,6 +11,8 @@ App = function()
     this.soundMuted = false;
     this.socialEnabled = true;
     this.gameOver = false;
+    this.musicPlaying = false;
+    this.musicPausedByPauseButton = false;
 
     // Scores
     this.scores = {values:[0,0,0]};
@@ -218,6 +220,7 @@ App = function()
         playButton.onMouseUp = function()
         {
     // Initialize AudioContext when the play button is clicked
+            console.log("[BUTTON] Play button clicked - starting game, musicMuted:", self.musicMuted, "musicPlaying:", self.musicPlaying);
             if (!self.audioContext || self.audioContext.state === 'suspended') {
         try {
                 self.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -334,6 +337,7 @@ App = function()
             creditsButtonSprite.setDrawFunction(wade.drawFunctions.fadeOpacity_(0.0, 1.0, 1.0, creditsButtonSprite.getDrawFunction()));
             creditsButton.onMouseUp = function()
             {
+                console.log("[BUTTON] Credits button clicked");
                 wade.clearScene();
                 self.credits();
             };
@@ -348,6 +352,7 @@ App = function()
                 var githubObj = new SceneObject(github);
                 githubObj.onMouseUp = function()
                 {
+                    console.log("[BUTTON] GitHub button clicked");
                     open('https://github.com/MessiahStudios', '_blank');
                 };
                 githubObj.setPosition(-wade.getScreenWidth()/2 + 65, wade.getScreenHeight()/2 - 75);
@@ -358,6 +363,7 @@ App = function()
                 var instagramObj = new SceneObject(instagram);
                 instagramObj.onMouseUp = function()
                 {
+                    console.log("[BUTTON] Instagram button clicked");
                     open('https://www.instagram.com/jaguarsjiujitsu/', '_blank');
                 };
                 instagramObj.setPosition(-wade.getScreenWidth()/2 + 120, wade.getScreenHeight()/2 - 75);
@@ -368,6 +374,7 @@ App = function()
                 var facebookObj = new SceneObject(facebook);
                 facebookObj.onMouseUp = function()
                 {
+                    console.log("[BUTTON] Facebook button clicked");
                     open('https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmessiahstudios.github.io%2Fdivine-gems-game%2F&amp;src=sdkpreparse');
                 };
                 facebookObj.setPosition(-wade.getScreenWidth()/2 + 175, wade.getScreenHeight()/2 - 75);
@@ -378,6 +385,7 @@ App = function()
                 var youtubeObj = new SceneObject(youtube);
                 youtubeObj.onMouseUp = function()
                 {
+                    console.log("[BUTTON] YouTube button clicked");
                     open('https://www.youtube.com/channel/UC_FZ9hdaRTOFAo-TBtc1fGw', '_blank');
                 };
                 youtubeObj.setPosition(-wade.getScreenWidth()/2 + 230, wade.getScreenHeight()/2 - 75);
@@ -389,6 +397,7 @@ App = function()
                 var twitterObj = new SceneObject(twitter);
                 twitterObj.onMouseUp = function()
                 {
+                    console.log("[BUTTON] X/Twitter button clicked");
                     open('https://x.com/Messiah_Studios', '_blank');
                 };
                 twitterObj.setPosition(-wade.getScreenWidth()/2 + 285, wade.getScreenHeight()/2 - 75);
@@ -426,6 +435,7 @@ App = function()
         var backButton = new SceneObject(backSprite);
         backButton.onMouseUp = function()
         {
+            console.log("[BUTTON] Back button clicked - returning to menu");
             wade.clearScene();
             self.game();
         };
@@ -462,6 +472,7 @@ App = function()
                         var githubObj = new SceneObject(github);
                         githubObj.onMouseUp = function()
                         {
+                            console.log("[BUTTON] Credits - GitHub button clicked");
                             open('https://github.com/MessiahStudios', '_blank');
                         };
                         githubObj.setPosition(-125, -wade.getScreenHeight()/2 + 225);
@@ -473,6 +484,7 @@ App = function()
             var instagramObj = new SceneObject(instagram);
             instagramObj.onMouseUp = function()
             {
+                console.log("[BUTTON] Credits - Instagram button clicked");
                 open('https://www.instagram.com/jaguarsjiujitsu/', '_blank');
             };
             instagramObj.setPosition(-75, -wade.getScreenHeight()/2 + 225);
@@ -483,6 +495,7 @@ App = function()
                         var facebookObj = new SceneObject(facebook);
                         facebookObj.onMouseUp = function()
                         {
+                            console.log("[BUTTON] Credits - Facebook button clicked");
                             open('https://www.facebook.com/Messiah.Studios.Social', '_blank');
                         };
                         facebookObj.setPosition(-25, -wade.getScreenHeight()/2 + 225);
@@ -493,6 +506,7 @@ App = function()
             var youtubeObj = new SceneObject(youtube);
             youtubeObj.onMouseUp = function()
             {
+                console.log("[BUTTON] Credits - YouTube button clicked");
                 open('https://www.youtube.com/channel/UC_FZ9hdaRTOFAo-TBtc1fGw', '_blank');
             };
             youtubeObj.setPosition(25, -wade.getScreenHeight()/2 + 225);
@@ -503,6 +517,7 @@ App = function()
                         var twitterObj = new SceneObject(twitter);
                         twitterObj.onMouseUp = function()
                         {
+                            console.log("[BUTTON] Credits - X/Twitter button clicked");
                             open('https://x.com/Messiah_Studios', '_blank');
                         };
                         twitterObj.setPosition(75, -wade.getScreenHeight()/2 + 225);
@@ -513,6 +528,7 @@ App = function()
                         var imdbObj = new SceneObject(imdb);
                         imdbObj.onMouseUp = function()
                         {
+                            console.log("[BUTTON] Credits - IMDB button clicked");
                             open('http://www.imdb.com/name/nm8210329/?ref_=ttfc_fc_cr33', '_blank');
                         };
                         imdbObj.setPosition(125, -wade.getScreenHeight()/2 + 225);
@@ -523,6 +539,7 @@ App = function()
                         var linkedInObj = new SceneObject(linkedIn);
                         linkedInObj.onMouseUp = function()
                         {
+                            console.log("[BUTTON] Credits - LinkedIn button clicked");
                             open('https://www.linkedin.com/in/kennethjamesmendoza', '_blank');
                         };
                         linkedInObj.setPosition(175, -wade.getScreenHeight()/2 + 225);
@@ -534,6 +551,7 @@ App = function()
         var geLink = new SceneObject(gameEngine);
         geLink.onMouseUp = function()
         {
+            console.log("[BUTTON] Credits - Wade Game Engine link clicked");
             open('https://clockworkchilli.com/', '_blank');
         };
         geLink.setPosition(0, -55);
@@ -552,6 +570,7 @@ App = function()
         var soundObject = new SceneObject(soundLink);
         soundObject.onMouseUp = function()
         {
+            console.log("[BUTTON] Credits - Sound image link clicked");
             open('http://www.soundimage.org', '_blank');
         };
         soundObject.setPosition(0, 300);
@@ -564,90 +583,7 @@ App = function()
      */
     this.inGameButtons = function()
     {
-        // Create the music mute button
-        if(self.musicMuted)
-        {
-            var muteSprite = new Sprite('images/buttonSoundOff.png', self.layers.front);
-        }
-        else
-        {
-            var muteSprite = new Sprite('images/buttonSoundOn.png', self.layers.front);
-        }
-
-        var muteButton = new SceneObject(muteSprite);
-        muteButton.removeOnGameOver = true;
-        muteButton.onMouseDown = function() {
-            self.musicMuted = !self.musicMuted;
-
-            if(self.musicMuted) {
-                if(self.musicPlaying) {
-            wade.stopAudio(self.musicSource);
-            self.musicSource = null;
-                    self.musicPlaying = false;
-                    muteSprite.setImageFile('images/buttonSoundOff.png');
-                }
-        } else {
-                if(!self.musicPlaying) {
-            self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
-                    self.musicPlaying = true;
-                    muteSprite.setImageFile('images/buttonSoundOn.png');
-                }
-        }
-        };
-        muteButton.setPosition(200, wade.getScreenHeight()/2 - muteSprite.getSize().y/2);
-        wade.addSceneObject(muteButton, true);
-
-        // Create the sound mute button
-        if(self.soundMuted)
-        {
-            var muteSprite2 = new Sprite('images/buttonsMuteOff.png', self.layers.front);
-        }
-        else
-        {
-            var muteSprite2 = new Sprite('images/buttonsMuteOn.png', self.layers.front);
-        }
-        var muteButton2 = new SceneObject(muteSprite2);
-        muteButton2.removeOnGameOver = true;
-        muteButton2.onMouseUp = function()
-        {
-            self.soundMuted = !self.soundMuted;
-            if(self.soundMuted)
-            {
-                muteSprite2.setImageFile('images/buttonsMuteOff.png');
-            }
-            else
-            {
-                muteSprite2.setImageFile('images/buttonsMuteOn.png');
-            }
-        };
-        muteButton2.setPosition(75, wade.getScreenHeight()/2 - muteSprite2.getSize().y/2);
-        wade.addSceneObject(muteButton2, true);
-
-        // Create the main menu button
-        var menuSprite = new Sprite('images/buttonBack.png', self.layers.front);
-        var menuObject = new SceneObject(menuSprite);
-        menuObject.removeOnGameOver = true;
-        menuObject.onMouseUp = function(){
-        // Stop music when returning to the main menu
-        if (self.musicPlaying) {
-        wade.stopAudio(self.musicSource);  // Stop any playing music
-        self.musicSource = null;  // Clear the music source
-        self.musicPlaying = false;  // Update music state
-        }
-
-            wade.setMainLoopCallback(null,'update');
-            wade.clearScene(); // Clear the scene
-
-            if(pauseButton.paused)
-            {
-                wade.resumeSimulation();
-            }
-            self.game(); // Create main menu
-        };
-        menuObject.setPosition(-200, wade.getScreenHeight()/2 - muteSprite.getSize().y/2);
-        wade.addSceneObject(menuObject, true);
-
-        // Create the pause/play button
+        // Create the pause/play button FIRST (so it can be referenced by menu button)
         var pauseText = new TextSprite('PAUSED','100px ArtDept1', '#44bce8', 'center', self.layers.front);
         var pauseTextObject = new SceneObject(pauseText);
         pauseTextObject.setPosition(0, -100);
@@ -662,8 +598,16 @@ App = function()
         pauseButton.onMouseUp = function()
         {
             this.paused = !this.paused;
+            console.log("[BUTTON] Pause button clicked - paused:", this.paused, "musicPlaying:", self.musicPlaying, "musicMuted:", self.musicMuted);
             if(this.paused)
             {
+                // Pause music if playing
+                if(self.musicPlaying && self.musicSource && !self.musicMuted)
+                {
+                    wade.stopAudio(self.musicSource);
+                    self.musicPausedByPauseButton = true;
+                }
+
                 // Create darker area
                 var darkSprite = new Sprite(null, self.layers.front);
                 darkSprite.setSize(wade.getScreenWidth(), wade.getScreenHeight());
@@ -692,12 +636,19 @@ App = function()
 
                 this.largeButton.onMouseUp = function()
                 {
+                    console.log("[BUTTON] Large unpause button clicked - resuming game");
                     wade.removeSceneObject(pauseButton.blackArea);
                     pauseTextObject.setVisible(false);
                     wade.resumeSimulation();
                     pauseSprite.setImageFile('images/buttonPause.png');
                     wade.removeSceneObject(this);
                     pauseButton.paused = false;
+                    // Resume music if it was paused by pause button
+                    if(self.musicPausedByPauseButton && !self.musicMuted)
+                    {
+                        self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
+                        self.musicPausedByPauseButton = false;
+                    }
                 };
                 wade.addSceneObject(this.largeButton, true);
 
@@ -712,10 +663,105 @@ App = function()
                 pauseTextObject.setVisible(false);
                 wade.resumeSimulation();
                 pauseSprite.setImageFile('images/buttonPause.png');
+                // Resume music if it was paused by pause button
+                if(self.musicPausedByPauseButton && !self.musicMuted)
+                {
+                    self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
+                    self.musicPausedByPauseButton = false;
+                }
             }
         };
         pauseButton.setPosition(-75, wade.getScreenHeight()/2 - pauseSprite.getSize().y/2);
         wade.addSceneObject(pauseButton, true);
+
+        // Create the music mute button
+        if(self.musicMuted)
+        {
+            var muteSprite = new Sprite('images/buttonSoundOff.png', self.layers.front);
+        }
+        else
+        {
+            var muteSprite = new Sprite('images/buttonSoundOn.png', self.layers.front);
+        }
+
+        var muteButton = new SceneObject(muteSprite);
+        muteButton.removeOnGameOver = true;
+        muteButton.onMouseUp = function() {
+            self.musicMuted = !self.musicMuted;
+
+            console.log("[BUTTON] Music mute button clicked - musicMuted:", self.musicMuted);
+            if(self.musicMuted) {
+                // Stop music if playing
+                if(self.musicSource) {
+                    wade.stopAudio(self.musicSource);
+                    self.musicSource = null;
+                }
+                muteSprite.setImageFile('images/buttonSoundOff.png');
+            } else {
+                // Resume music if game is playing and not paused
+                if(self.musicPlaying && !pauseButton.paused && !self.musicPausedByPauseButton) {
+                    self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
+                }
+                muteSprite.setImageFile('images/buttonSoundOn.png');
+            }
+        };
+        muteButton.setPosition(200, wade.getScreenHeight()/2 - muteSprite.getSize().y/2);
+        wade.addSceneObject(muteButton, true);
+
+        // Create the sound mute button
+        if(self.soundMuted)
+        {
+            var muteSprite2 = new Sprite('images/buttonsMuteOff.png', self.layers.front);
+        }
+        else
+        {
+            var muteSprite2 = new Sprite('images/buttonsMuteOn.png', self.layers.front);
+        }
+        var muteButton2 = new SceneObject(muteSprite2);
+        muteButton2.removeOnGameOver = true;
+        muteButton2.onMouseUp = function()
+        {
+            self.soundMuted = !self.soundMuted;
+            console.log("[BUTTON] Sound mute button clicked - soundMuted:", self.soundMuted);
+            if(self.soundMuted)
+            {
+                muteSprite2.setImageFile('images/buttonsMuteOff.png');
+            }
+            else
+            {
+                muteSprite2.setImageFile('images/buttonsMuteOn.png');
+            }
+        };
+        muteButton2.setPosition(75, wade.getScreenHeight()/2 - muteSprite2.getSize().y/2);
+        wade.addSceneObject(muteButton2, true);
+
+        // Create the main menu button
+        var menuSprite = new Sprite('images/buttonBack.png', self.layers.front);
+        var menuObject = new SceneObject(menuSprite);
+        menuObject.removeOnGameOver = true;
+        menuObject.onMouseUp = function(){
+            // Stop music when returning to the main menu
+            console.log("[BUTTON] Menu button clicked - stopping music and returning to main menu");
+            if (self.musicSource) {
+                wade.stopAudio(self.musicSource);
+                self.musicSource = null;
+            }
+            self.musicPlaying = false;
+            self.musicPausedByPauseButton = false;
+
+            wade.setMainLoopCallback(null,'update');
+            
+            // Resume simulation if paused before clearing scene
+            if(pauseButton.paused)
+            {
+                wade.resumeSimulation();
+            }
+            
+            wade.clearScene();
+            self.game();
+        };
+        menuObject.setPosition(-200, wade.getScreenHeight()/2 - muteSprite.getSize().y/2);
+        wade.addSceneObject(menuObject, true);
     };
 
     /**
@@ -778,6 +824,7 @@ App = function()
 
                     backButton.onMouseUp = function() // Go to main menu
                     {
+            console.log("[BUTTON] Back button clicked - returning to menu");
                         wade.clearScene();
                         self.game();
                     };
