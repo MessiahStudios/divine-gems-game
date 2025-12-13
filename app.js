@@ -79,7 +79,7 @@ App = function()
         {
             wade.loadAudio('sounds/PowerUp8.ogg');
             wade.loadAudio('sounds/fiveSound-lion.ogg');
-        wade.loadAudio('sounds/fiveSound-lionAtWAR.ogg');
+            wade.loadAudio('sounds/fiveSound-lionAtWAR.ogg');
             wade.loadAudio('sounds/Explosion3.ogg');
         }
 
@@ -89,7 +89,7 @@ App = function()
         wade.loadImage('images/christian_arabic_symbol_new.png');
         wade.loadImage('images/crown_object_new.png');
         wade.loadImage('images/fish_symbol_new.png');
-    wade.loadImage('images/nails_object_new.png');
+        wade.loadImage('images/nails_object_new.png');
         wade.loadImage('images/selected.png');
         //wade.loadImage('images/special4.png');
         wade.loadImage('images/special5-lion.png');
@@ -97,7 +97,9 @@ App = function()
         wade.loadImage('images/christian_arabic_symbol_glow.png');
         wade.loadImage('images/crown_object_glow.png');
         wade.loadImage('images/fish_symbol_glow.png');
-    wade.loadImage('images/nails_object_glow.png');
+        wade.loadImage('images/nails_object_glow.png');
+        wade.loadImage('images/trinity_object_new.png');
+        wade.loadImage('images/trinity_object_glow.png');
 
         // UI and background
         wade.loadImage('images/background.png');
@@ -905,3 +907,4 @@ App = function()
 // Start the app
 var app = new App();
 app.loadingBar();  // Start the loading process
+
