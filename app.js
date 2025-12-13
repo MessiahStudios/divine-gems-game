@@ -746,7 +746,7 @@ App = function()
         menuObject.onMouseUp = function(){
             // Stop music when returning to the main menu
             console.log("[BUTTON] Menu button clicked - stopping music and returning to main menu");
-            if (self.musicSource) {
+            if (self.musicSource !== null && self.musicSource !== undefined) {
                 wade.stopAudio(self.musicSource);
                 self.musicSource = null;
             }
@@ -909,5 +909,6 @@ App = function()
 // Start the app
 var app = new App();
 app.loadingBar();  // Start the loading process
+
 
 
