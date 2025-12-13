@@ -258,9 +258,11 @@ App = function()
                 numCells: {x:7, y:7},
                 cellSize: {x:85, y:85},
                 margin: 5,
-                items: [{normal: 'images/cross_object_new.png', special:'images/cross_object_glow.png', probability:25},
+                items: [
+                    {normal: 'images/cross_object_new.png', special:'images/cross_object_glow.png', probability:25},
                     {normal: 'images/christian_arabic_symbol_new.png', special:'images/christian_arabic_symbol_glow.png', probability:25},
                     {normal: 'images/crown_object_new.png', special:'images/crown_object_glow.png', probability:25},
+                    {normal: 'images/trinity_object_new.png', special:'images/trinity_object_glow.png', probability:25},
                     {normal: 'images/fish_symbol_new.png', special:'images/fish_symbol_glow.png', probability:25},
                     {normal: 'images/nails_object_new.png', special:'images/nails_object_glow.png', probability:25}],
                 specialFive: 'images/special5-lion.png',
@@ -907,4 +909,5 @@ App = function()
 // Start the app
 var app = new App();
 app.loadingBar();  // Start the loading process
+
 
