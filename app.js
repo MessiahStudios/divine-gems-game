@@ -1,3 +1,15 @@
+// app.js (TOP OF FILE)
+(function () {
+  // If app already exists, do NOT rebuild anything.
+  if (window.__DIVINE_GEMS_APP__) {
+    console.warn("[BOOT] App already exists - preventing double init");
+    // ensure WADE points to the existing instance
+    if (typeof wade !== "undefined") wade.app = window.__DIVINE_GEMS_APP__;
+    return;
+  }
+})();
+
+
 // Open Source Match 3 Game by Clockworkchilli
 App = function()
 {
@@ -1037,7 +1049,7 @@ self.hasStartedGame = true;
 
 //# sourceURL=app.js
 // Start the app
-var app = new App();
-app.loadingBar();  // Start the loading process
-
-
+window.__DIVINE_GEMS_APP__ = new App();
+wade.app = window.__DIVINE_GEMS_APP__;
+window.app = window.__DIVINE_GEMS_APP__; // keep compatibility
+window.__DIVINE_GEMS_APP__.loadingBar();
