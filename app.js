@@ -795,41 +795,52 @@ self.hasStartedGame = true;
         var muteButton = new SceneObject(muteSprite);
         muteButton.removeOnGameOver = true;
         muteButton.onMouseUp = function() {
-            self.musicMuted = !self.musicMuted;
+    self.musicMuted = !self.musicMuted;
 
-            console.log("[BUTTON] ========== MUSIC MUTE BUTTON CLICKED ==========");
-            console.log("[BUTTON] New musicMuted state:", self.musicMuted);
-            self.logMusicState("ON MUTE BUTTON CLICK");
-            if(self.musicMuted) {
-                console.log("[BUTTON] -> MUTING MUSIC");
-                // WADE 1.5 requires UID parameter for stopAudio to work
-                if(self.musicPlaying && !self.musicPausedByPauseButton && self.musicSource && self.musicSource !== -1) {
-                    console.log("[BUTTON] -> Music was playing, stopping with UID:", self.musicSource);
-                    try {
-                        wade.stopAudio(self.musicSource);
-                        console.log("[BUTTON] -> wade.stopAudio(UID) succeeded");
-                    } catch(e) {
-                        console.log("[BUTTON] -> ERROR stopping audio:", e);
-                    }
-                    self.musicSource = null;
-                } else {
-                    console.log("[BUTTON] -> Music was not actively playing or no valid UID, musicSource=" + self.musicSource);
-                }
-                muteSprite.setImageFile('images/buttonSoundOff.png');
-            } else {
-                console.log("[BUTTON] -> UNMUTING MUSIC");
-                // Resume music if game started music and not paused by pause button
-                console.log("[BUTTON] -> Checking resume conditions: musicPlaying=" + self.musicPlaying + ", pauseButton.paused=" + pauseButton.paused + ", musicPausedByPauseButton=" + self.musicPausedByPauseButton);
-                if(self.musicPlaying && !pauseButton.paused && !self.musicPausedByPauseButton) {
-                    console.log("[BUTTON] -> Conditions met, starting music");
-                    self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
-                } else {
-                    console.log("[BUTTON] -> Conditions NOT met, not starting music");
-                }
-                muteSprite.setImageFile('images/buttonSoundOn.png');
+    console.log("[BUTTON] ========== MUSIC MUTE BUTTON CLICKED ==========");
+    console.log("[BUTTON] New musicMuted state:", self.musicMuted);
+    self.logMusicState("ON MUTE BUTTON CLICK");
+
+    if (self.musicMuted) {
+        console.log("[BUTTON] -> MUTING MUSIC");
+
+        if (self.musicSource && self.musicSource !== -1) {
+            console.log("[BUTTON] -> Stopping with UID:", self.musicSource);
+            try {
+                wade.stopAudio(self.musicSource);
+                console.log("[BUTTON] -> wade.stopAudio(UID) succeeded");
+            } catch(e) {
+                console.log("[BUTTON] -> ERROR stopping audio:", e);
             }
-            self.logMusicState("AFTER MUTE BUTTON HANDLER");
-        };
+        } else {
+            console.log("[BUTTON] -> No valid UID, musicSource=" + self.musicSource);
+        }
+
+        self.musicSource = null;
+        self.musicPlaying = false; // ✅ important
+
+        muteSprite.setImageFile('images/buttonSoundOff.png');
+
+    } else {
+        console.log("[BUTTON] -> UNMUTING MUSIC");
+        console.log("[BUTTON] -> Checking resume conditions: hasStartedGame=" + self.hasStartedGame +
+            ", pauseButton.paused=" + pauseButton.paused +
+            ", musicPausedByPauseButton=" + self.musicPausedByPauseButton);
+
+        if (self.hasStartedGame && !pauseButton.paused && !self.musicPausedByPauseButton) {
+            console.log("[BUTTON] -> Conditions met, starting music");
+            self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
+            self.musicPlaying = true; // ✅ important
+        } else {
+            console.log("[BUTTON] -> Conditions NOT met, not starting music");
+        }
+
+        muteSprite.setImageFile('images/buttonSoundOn.png');
+    }
+
+    self.logMusicState("AFTER MUTE BUTTON HANDLER");
+};
+
         muteButton.setPosition(200, wade.getScreenHeight()/2 - muteSprite.getSize().y/2);
         wade.addSceneObject(muteButton, true);
 
@@ -1028,4 +1039,5 @@ self.hasStartedGame = true;
 // Start the app
 var app = new App();
 app.loadingBar();  // Start the loading process
+
 
