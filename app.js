@@ -14,6 +14,7 @@ App = function()
     this.musicPlaying = false;
     this.musicPausedByPauseButton = false;
     this.musicSource = null;
+    this.hasStartedGame = false;
 
     // Music control helper functions
     this.logMusicState = function(context) {
@@ -309,6 +310,11 @@ App = function()
         var playButton = new SceneObject(playButtonSprite);
         playButton.onMouseUp = function()
         {
+            if (self.hasStartedGame) {
+  console.log("[BUTTON] Play ignored - already started");
+  return;
+}
+self.hasStartedGame = true;
     // Initialize AudioContext when the play button is clicked
             console.log("[BUTTON] Play button clicked - starting game, musicMuted:", self.musicMuted, "musicPlaying:", self.musicPlaying);
             if (!self.audioContext || self.audioContext.state === 'suspended') {
@@ -527,6 +533,7 @@ App = function()
         backButton.onMouseUp = function()
         {
             console.log("[BUTTON] Back button clicked - returning to menu");
+            self.hasStartedGame = false;
             wade.clearScene();
             self.game();
         };
@@ -1021,3 +1028,4 @@ App = function()
 // Start the app
 var app = new App();
 app.loadingBar();  // Start the loading process
+
