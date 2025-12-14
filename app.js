@@ -7,7 +7,7 @@
     if (typeof wade !== "undefined") wade.app = window.__DIVINE_GEMS_APP__;
     return;
   }
-})();
+
 
 
 // Open Source Match 3 Game by Clockworkchilli
@@ -1053,3 +1053,5 @@ window.__DIVINE_GEMS_APP__ = new App();
 wade.app = window.__DIVINE_GEMS_APP__;
 window.app = window.__DIVINE_GEMS_APP__; // keep compatibility
 window.__DIVINE_GEMS_APP__.loadingBar();
+
+})();
