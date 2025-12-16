@@ -72,6 +72,7 @@
             console.log("[MUSIC] startMusic() called");
             self.logMusicState("BEFORE startMusic");
             if (!self.musicMuted) {
+                self.musicPaused = false;
                 console.log("[MUSIC] -> Music not muted, proceeding to start");
                 self.stopMusic();
                 console.log("[MUSIC] -> Calling wade.playAudio (looping)");
@@ -985,4 +986,5 @@
     window.__DIVINE_GEMS_APP__.loadingBar();
 
 })();
+
 
