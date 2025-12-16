@@ -688,7 +688,7 @@
                 if (this.paused) {
                     console.log("[BUTTON] -> PAUSING GAME");
                     // Always mark paused when game is paused
-                    if (self.musicPlaying && !self.musicMuted && self.musicSource) {
+                    if (self.musicPlaying && !self.musicMuted) {
                         console.log("[BUTTON] -> Conditions met to pause music");
                         self.pauseMusic(); // sets musicPaused=true + stops audio
                     } else {
@@ -985,3 +985,4 @@
     window.__DIVINE_GEMS_APP__.loadingBar();
 
 })();
+
