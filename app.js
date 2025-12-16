@@ -24,7 +24,8 @@ App = function()
     this.socialEnabled = true;
     this.gameOver = false;
     this.musicPlaying = false;
-    this.musicPausedByPauseButton = false;
+  this.musicPaused = false;
+    //this.musicPausedByPauseButton = false;
     this.musicSource = null;
     this.hasStartedGame = false;
 
@@ -33,7 +34,7 @@ App = function()
         console.log("[MUSIC STATE] " + context + " => {" +
             " musicPlaying: " + self.musicPlaying + "," +
             " musicMuted: " + self.musicMuted + "," +
-            " musicPausedByPauseButton: " + self.musicPausedByPauseButton + "," +
+            " musicPausedByPauseButton: " + "," +
             " musicSource: " + (self.musicSource ? "EXISTS" : "NULL") +
             " }");
     };
@@ -55,7 +56,6 @@ App = function()
         }
         self.musicSource = null;
         self.musicPlaying = false;
-        self.musicPausedByPauseButton = false;
         self.logMusicState("AFTER stopMusic");
     };
 
@@ -75,45 +75,43 @@ App = function()
         self.logMusicState("AFTER startMusic");
     };
 
-    this.pauseMusic = function() {
-        console.log("[MUSIC] pauseMusic() called");
-        self.logMusicState("BEFORE pauseMusic");
-        // WADE 1.5 requires UID parameter for stopAudio to work
-        if (self.musicSource && self.musicSource !== -1) {
-            console.log("[MUSIC] -> Calling wade.stopAudio with UID:", self.musicSource);
-            try {
-                wade.stopAudio(self.musicSource);
-                console.log("[MUSIC] -> wade.stopAudio(UID) succeeded");
-            } catch(e) {
-                console.log("[MUSIC] -> ERROR in wade.stopAudio():", e);
-            }
-        } else {
-            console.log("[MUSIC] -> No valid musicSource UID to pause (musicSource=" + self.musicSource + ")");
-        }
-        self.musicSource = null;
-        self.musicPausedByPauseButton = true;
-        console.log("[MUSIC] -> Set musicPausedByPauseButton = true");
-        self.logMusicState("AFTER pauseMusic");
-    };
+this.pauseMusic = function() {
+    console.log("[MUSIC] pauseMusic() called");
+    self.logMusicState("BEFORE pauseMusic");
 
-    this.resumeMusic = function() {
-        console.log("[MUSIC] resumeMusic() called");
-        self.logMusicState("BEFORE resumeMusic");
-        if (self.musicPausedByPauseButton) {
-            if (!self.musicMuted) {
-                console.log("[MUSIC] -> Was paused by pause button and not muted, resuming");
-                self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
-                self.musicPlaying = true;
-                console.log("[MUSIC] -> Music resumed successfully");
-            } else {
-                console.log("[MUSIC] -> Was paused by pause button but muted, not resuming audio");
-            }
-            self.musicPausedByPauseButton = false;
-        } else {
-            console.log("[MUSIC] -> Skipping resume (pausedByButton: " + self.musicPausedByPauseButton + ", muted: " + self.musicMuted + ")");
-        }
+    self.musicPaused = true;
+
+    if (self.musicSource && self.musicSource !== -1) {
+        console.log("[MUSIC] -> Stopping audio UID:", self.musicSource);
+        try { wade.stopAudio(self.musicSource); } catch(e) { console.log(e); }
+    }
+
+    self.musicSource = null;
+    self.musicPlaying = false;
+
+    self.logMusicState("AFTER pauseMusic");
+};
+
+this.resumeMusic = function() {
+    console.log("[MUSIC] resumeMusic() called");
+    self.logMusicState("BEFORE resumeMusic");
+
+    self.musicPaused = false;
+
+    // Only start if game is started, not muted, and not already playing
+    if (!self.hasStartedGame || self.musicMuted || self.musicPlaying) {
+        console.log("[MUSIC] -> Not resuming (hasStartedGame=" + self.hasStartedGame +
+            ", muted=" + self.musicMuted + ", musicPlaying=" + self.musicPlaying + ")");
         self.logMusicState("AFTER resumeMusic");
-    };
+        return;
+    }
+
+    console.log("[MUSIC] -> Restarting looping music");
+    self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
+    self.musicPlaying = true;
+
+    self.logMusicState("AFTER resumeMusic");
+};
 
     // Scores
     this.scores = {values:[0,0,0]};
@@ -724,7 +722,7 @@ self.hasStartedGame = true;
                 {
                     // Music is muted or already stopped, but we still need to track that game is paused
                     console.log("[BUTTON] -> Music muted or no source, but tracking pause state");
-                    self.musicPausedByPauseButton = true;
+                   
                 }
                 else
                 {
@@ -837,9 +835,9 @@ self.hasStartedGame = true;
         console.log("[BUTTON] -> UNMUTING MUSIC");
         console.log("[BUTTON] -> Checking resume conditions: hasStartedGame=" + self.hasStartedGame +
             ", pauseButton.paused=" + pauseButton.paused +
-            ", musicPausedByPauseButton=" + self.musicPausedByPauseButton);
+            ", musicPausedByPauseButton=");
 
-        if (self.hasStartedGame && !pauseButton.paused && !self.musicPausedByPauseButton) {
+        if (self.hasStartedGame && !pauseButton.paused) {
             console.log("[BUTTON] -> Conditions met, starting music");
             self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
             self.musicPlaying = true; // ✅ important
@@ -1055,3 +1053,4 @@ window.app = window.__DIVINE_GEMS_APP__; // keep compatibility
 window.__DIVINE_GEMS_APP__.loadingBar();
 
 })();
+
