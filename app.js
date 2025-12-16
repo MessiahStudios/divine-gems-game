@@ -31,13 +31,14 @@ App = function()
 
     // Music control helper functions
     this.logMusicState = function(context) {
-        console.log("[MUSIC STATE] " + context + " => {" +
-            " musicPlaying: " + self.musicPlaying + "," +
-            " musicMuted: " + self.musicMuted + "," +
-            " musicPausedByPauseButton: " + "," +
-            " musicSource: " + (self.musicSource ? "EXISTS" : "NULL") +
-            " }");
-    };
+    console.log("[MUSIC STATE] " + context + " => {" +
+        " musicPlaying: " + self.musicPlaying + "," +
+        " musicMuted: " + self.musicMuted + "," +
+        " musicPaused: " + self.musicPaused + "," +
+        " musicSource: " + (self.musicSource ? "EXISTS" : "NULL") +
+        " }");
+};
+
 
     this.stopMusic = function() {
         console.log("[MUSIC] stopMusic() called");
@@ -1053,4 +1054,5 @@ window.app = window.__DIVINE_GEMS_APP__; // keep compatibility
 window.__DIVINE_GEMS_APP__.loadingBar();
 
 })();
+
 
