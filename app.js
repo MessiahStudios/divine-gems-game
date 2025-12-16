@@ -712,23 +712,16 @@ self.hasStartedGame = true;
             if(this.paused)
             {
                 console.log("[BUTTON] -> PAUSING GAME");
-                // Pause music if playing and not muted
-                if(self.musicPlaying && !self.musicMuted && self.musicSource)
-                {
-                    console.log("[BUTTON] -> Conditions met to pause music (musicPlaying=true, musicMuted=false)");
-                    self.pauseMusic();
-                }
-                else if(self.musicPlaying)
-                {
-                    // Music is muted or already stopped, but we still need to track that game is paused
-                    console.log("[BUTTON] -> Music muted or no source, but tracking pause state");
-                   
-                }
-                else
-                {
-                    console.log("[BUTTON] -> Skipping pauseMusic (musicPlaying=" + self.musicPlaying + ", musicMuted=" + self.musicMuted + ")");
-                }
-
+               // Always mark paused when game is paused
+              if (self.musicPlaying && !self.musicMuted && self.musicSource) {
+    console.log("[BUTTON] -> Conditions met to pause music");
+    self.pauseMusic(); // sets musicPaused=true + stops audio
+} else {
+    console.log("[BUTTON] -> No playing source (or muted). Tracking pause state anyway.");
+    self.musicPaused = true;
+    self.musicPlaying = false;
+    self.musicSource = null;
+}
                 // Create darker area
                 var darkSprite = new Sprite(null, self.layers.front);
                 darkSprite.setSize(wade.getScreenWidth(), wade.getScreenHeight());
@@ -1053,6 +1046,7 @@ window.app = window.__DIVINE_GEMS_APP__; // keep compatibility
 window.__DIVINE_GEMS_APP__.loadingBar();
 
 })();
+
 
 
 
