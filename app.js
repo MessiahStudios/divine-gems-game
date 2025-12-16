@@ -203,10 +203,10 @@
             wade.loadScript('counter.js');
             wade.loadScript('match3.js');
 
-            // Load AUDIO
+            // Load AUDIO reverted back to old method
             if (wade.isWebAudioSupported()) {
                 // background music
-                wade.loadAudio(self.musicFile);
+                wade.preloadAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', false, true);
             }
 
             if (wade.isWebAudioSupported()) {
@@ -376,11 +376,13 @@
                     }
                 }
 
-                if (!self.musicPlaying) {
-                    self.startMusic();
-                }
 
                 wade.clearScene();
+                // old method
+                if (!self.musicMuted) {
+                    self.musicPlaying = true;
+                    self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
+                }
 
 
                 // Draw background and foreground
@@ -873,13 +875,15 @@
             var menuObject = new SceneObject(menuSprite);
             menuObject.removeOnGameOver = true;
             menuObject.onMouseUp = function () {
+                wade.setMainLoopCallback(null, 'update');
+                // old method
+                wade.stopAudio(self.musicSource);
+
                 console.log("[BUTTON] ========== BACK TO MENU BUTTON CLICKED ==========");
                 self.logMusicState("ON MENU BUTTON CLICK");
                 // Stop music when returning to the main menu
                 console.log("[BUTTON] -> Calling stopMusic");
                 self.stopMusic();
-
-                wade.setMainLoopCallback(null, 'update');
 
                 // Resume simulation if paused before clearing scene
                 if (pauseButton.paused) {
@@ -902,6 +906,9 @@
             console.log("[GAME] ========== GAME OVER ==========");
             self.logMusicState("ON GAME OVER");
             this.gameOver = false;
+            // older method 
+            self.musicPlaying = false;
+            wade.stopAudio(self.musicSource);
             // Force music to stop (playing or not)
             console.log("[GAME] -> Calling stopMusic");
             self.stopMusic();
