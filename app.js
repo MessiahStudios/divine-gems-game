@@ -26,6 +26,7 @@
         this.musicPaused = false;
         this.musicSource = null;
         this.hasStartedGame = false;
+        this.musicFile = 'sounds/Walperion-Music-Ode-to-Victory.ogg';
 
         // Music control helper functions
         this.logMusicState = function (context) {
@@ -38,25 +39,34 @@
         };
 
 
-        this.stopMusic = function () {
-            console.log("[MUSIC] stopMusic() called");
-            self.logMusicState("BEFORE stopMusic");
-            // WADE 1.5 requires UID parameter for stopAudio to work
-            if (self.musicSource && self.musicSource !== -1) {
-                console.log("[MUSIC] -> Calling wade.stopAudio with UID:", self.musicSource);
-                try {
-                    wade.stopAudio(self.musicSource);
-                    console.log("[MUSIC] -> wade.stopAudio(UID) succeeded");
-                } catch (e) {
-                    console.log("[MUSIC] -> ERROR in wade.stopAudio():", e);
-                }
-            } else {
-                console.log("[MUSIC] -> No valid musicSource UID to stop (musicSource=" + self.musicSource + ")");
-            }
-            self.musicSource = null;
-            self.musicPlaying = false;
-            self.logMusicState("AFTER stopMusic");
-        };
+this.stopMusic = function () {
+    console.log("[MUSIC] stopMusic() called");
+    self.logMusicState("BEFORE stopMusic");
+
+    // 1) Try stopping by UID/handle (some WADE builds)
+    if (self.musicSource !== null && self.musicSource !== undefined) {
+        try {
+            console.log("[MUSIC] -> stopAudio(handle):", self.musicSource, "type:", typeof self.musicSource);
+            wade.stopAudio(self.musicSource);
+            console.log("[MUSIC] -> stopAudio(handle) OK");
+        } catch (e) {
+            console.log("[MUSIC] -> stopAudio(handle) FAILED:", e);
+        }
+    }
+
+    // 2) Try stopping by file path (other WADE builds)
+    try {
+        console.log("[MUSIC] -> stopAudio(path):", self.musicFile);
+        wade.stopAudio(self.musicFile);
+        console.log("[MUSIC] -> stopAudio(path) OK");
+    } catch (e) {
+        console.log("[MUSIC] -> stopAudio(path) FAILED:", e);
+    }
+
+    self.musicSource = null;
+    self.musicPlaying = false;
+    self.logMusicState("AFTER stopMusic");
+};
 
         this.startMusic = function () {
             console.log("[MUSIC] startMusic() called");
@@ -65,8 +75,10 @@
                 console.log("[MUSIC] -> Music not muted, proceeding to start");
                 self.stopMusic();
                 console.log("[MUSIC] -> Calling wade.playAudio (looping)");
-                self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
+                self.musicSource = wade.playAudio(self.musicFile, true);
+                console.log("[MUSIC] -> playAudio returned:", self.musicSource, "type:", typeof self.musicSource);
                 self.musicPlaying = true;
+                
                 console.log("[MUSIC] -> Music started successfully");
             } else {
                 console.log("[MUSIC] -> Music is muted, NOT starting");
@@ -106,8 +118,10 @@
             }
 
             console.log("[MUSIC] -> Restarting looping music");
-            self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
+            self.musicSource = wade.playAudio(self.musicFile, true);
+            console.log("[MUSIC] -> playAudio returned:", self.musicSource, "type:", typeof self.musicSource);
             self.musicPlaying = true;
+
 
             self.logMusicState("AFTER resumeMusic");
         };
@@ -163,7 +177,7 @@
             // Load AUDIO
             if (wade.isWebAudioSupported()) {
                 // background music
-                wade.preloadAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', false, false);
+                wade.loadAudio(self.musicFile);
             }
 
             if (wade.isWebAudioSupported()) {
@@ -990,3 +1004,4 @@
     window.__DIVINE_GEMS_APP__.loadingBar();
 
 })();
+
