@@ -34,39 +34,39 @@
                 " musicPlaying: " + self.musicPlaying + "," +
                 " musicMuted: " + self.musicMuted + "," +
                 " musicPaused: " + self.musicPaused + "," +
-                " musicSource: " + (self.musicSource ? "EXISTS" : "NULL") +
+                " musicSource: " + String(self.musicSource) +
                 " }");
         };
 
 
-this.stopMusic = function () {
-    console.log("[MUSIC] stopMusic() called");
-    self.logMusicState("BEFORE stopMusic");
+        this.stopMusic = function () {
+            console.log("[MUSIC] stopMusic() called");
+            self.logMusicState("BEFORE stopMusic");
 
-    // 1) Try stopping by UID/handle (some WADE builds)
-    if (self.musicSource !== null && self.musicSource !== undefined) {
-        try {
-            console.log("[MUSIC] -> stopAudio(handle):", self.musicSource, "type:", typeof self.musicSource);
-            wade.stopAudio(self.musicSource);
-            console.log("[MUSIC] -> stopAudio(handle) OK");
-        } catch (e) {
-            console.log("[MUSIC] -> stopAudio(handle) FAILED:", e);
-        }
-    }
+            // 1) Try stopping by UID/handle (some WADE builds)
+            if (self.musicSource !== null && self.musicSource !== undefined) {
+                try {
+                    console.log("[MUSIC] -> stopAudio(handle):", self.musicSource, "type:", typeof self.musicSource);
+                    wade.stopAudio(self.musicSource);
+                    console.log("[MUSIC] -> stopAudio(handle) OK");
+                } catch (e) {
+                    console.log("[MUSIC] -> stopAudio(handle) FAILED:", e);
+                }
+            }
 
-    // 2) Try stopping by file path (other WADE builds)
-    try {
-        console.log("[MUSIC] -> stopAudio(path):", self.musicFile);
-        wade.stopAudio(self.musicFile);
-        console.log("[MUSIC] -> stopAudio(path) OK");
-    } catch (e) {
-        console.log("[MUSIC] -> stopAudio(path) FAILED:", e);
-    }
+            // 2) Try stopping by file path (other WADE builds)
+            try {
+                console.log("[MUSIC] -> stopAudio(path):", self.musicFile);
+                wade.stopAudio(self.musicFile);
+                console.log("[MUSIC] -> stopAudio(path) OK");
+            } catch (e) {
+                console.log("[MUSIC] -> stopAudio(path) FAILED:", e);
+            }
 
-    self.musicSource = null;
-    self.musicPlaying = false;
-    self.logMusicState("AFTER stopMusic");
-};
+            self.musicSource = null;
+            self.musicPlaying = false;
+            self.logMusicState("AFTER stopMusic");
+        };
 
         this.startMusic = function () {
             console.log("[MUSIC] startMusic() called");
@@ -78,7 +78,7 @@ this.stopMusic = function () {
                 self.musicSource = wade.playAudio(self.musicFile, true);
                 console.log("[MUSIC] -> playAudio returned:", self.musicSource, "type:", typeof self.musicSource);
                 self.musicPlaying = true;
-                
+
                 console.log("[MUSIC] -> Music started successfully");
             } else {
                 console.log("[MUSIC] -> Music is muted, NOT starting");
@@ -91,17 +91,11 @@ this.stopMusic = function () {
             self.logMusicState("BEFORE pauseMusic");
 
             self.musicPaused = true;
-
-            if (self.musicSource && self.musicSource !== -1) {
-                console.log("[MUSIC] -> Stopping audio UID:", self.musicSource);
-                try { wade.stopAudio(self.musicSource); } catch (e) { console.log(e); }
-            }
-
-            self.musicSource = null;
-            self.musicPlaying = false;
+            self.stopMusic(); // kill-switch: tries handle AND path
 
             self.logMusicState("AFTER pauseMusic");
         };
+
 
         this.resumeMusic = function () {
             console.log("[MUSIC] resumeMusic() called");
@@ -779,25 +773,10 @@ this.stopMusic = function () {
                 self.logMusicState("ON MUTE BUTTON CLICK");
 
                 if (self.musicMuted) {
-                    console.log("[BUTTON] -> MUTING MUSIC");
-
-                    if (self.musicSource && self.musicSource !== -1) {
-                        console.log("[BUTTON] -> Stopping with UID:", self.musicSource);
-                        try {
-                            wade.stopAudio(self.musicSource);
-                            console.log("[BUTTON] -> wade.stopAudio(UID) succeeded");
-                        } catch (e) {
-                            console.log("[BUTTON] -> ERROR stopping audio:", e);
-                        }
-                    } else {
-                        console.log("[BUTTON] -> No valid UID, musicSource=" + self.musicSource);
-                    }
-
-                    self.musicSource = null;
-                    self.musicPlaying = false; // ✅ important
-
+                    console.log("[BUTTON] -> MUTING MUSIC (kill switch)");
+                    self.stopMusic();         // stops by handle + by path
+                    self.musicPaused = false; // mute is not "pause"
                     muteSprite.setImageFile('images/buttonSoundOff.png');
-
                 } else {
                     console.log("[BUTTON] -> UNMUTING MUSIC");
                     console.log("[BUTTON] -> Checking resume conditions: hasStartedGame=" + self.hasStartedGame +
@@ -806,8 +785,9 @@ this.stopMusic = function () {
 
                     if (self.hasStartedGame && !pauseButton.paused) {
                         console.log("[BUTTON] -> Conditions met, starting music");
-                        self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
-                        self.musicPlaying = true; // ✅ important
+                        self.musicSource = wade.playAudio(self.musicFile, true);
+                        console.log("[MUSIC] -> playAudio returned:", self.musicSource, "type:", typeof self.musicSource);
+                        self.musicPlaying = true;
                     } else {
                         console.log("[BUTTON] -> Conditions NOT met, not starting music");
                     }
@@ -817,6 +797,7 @@ this.stopMusic = function () {
 
                 self.logMusicState("AFTER MUTE BUTTON HANDLER");
             };
+
 
             muteButton.setPosition(200, wade.getScreenHeight() / 2 - muteSprite.getSize().y / 2);
             wade.addSceneObject(muteButton, true);
@@ -1004,4 +985,3 @@ this.stopMusic = function () {
     window.__DIVINE_GEMS_APP__.loadingBar();
 
 })();
-
