@@ -25,7 +25,6 @@ App = function()
     this.gameOver = false;
     this.musicPlaying = false;
   this.musicPaused = false;
-    //this.musicPausedByPauseButton = false;
     this.musicSource = null;
     this.hasStartedGame = false;
 
@@ -836,7 +835,7 @@ self.hasStartedGame = true;
         console.log("[BUTTON] -> UNMUTING MUSIC");
         console.log("[BUTTON] -> Checking resume conditions: hasStartedGame=" + self.hasStartedGame +
             ", pauseButton.paused=" + pauseButton.paused +
-            ", musicPausedByPauseButton=");
+            ");
 
         if (self.hasStartedGame && !pauseButton.paused) {
             console.log("[BUTTON] -> Conditions met, starting music");
@@ -1054,5 +1053,6 @@ window.app = window.__DIVINE_GEMS_APP__; // keep compatibility
 window.__DIVINE_GEMS_APP__.loadingBar();
 
 })();
+
 
 
