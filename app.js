@@ -65,6 +65,7 @@
 
             self.musicSource = null;
             self.musicPlaying = false;
+            self.musicPaused = false;
             self.logMusicState("AFTER stopMusic");
         };
 
@@ -986,5 +987,6 @@
     window.__DIVINE_GEMS_APP__.loadingBar();
 
 })();
+
 
 
