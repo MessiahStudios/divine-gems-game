@@ -27,12 +27,18 @@
         this.gameOver = false;
         this.musicPlaying = false;
         this.musicPaused = false;
-        this.musicSource = null;
         this.hasStartedGame = false;
         this.musicFile = 'sounds/Walperion-Music-Ode-to-Victory.ogg';
 
-        // Patch B
-        this.musicHandles = [];
+        // Persistent guard to prevent double-execution from touch+mouse events
+        this._musicStartInProgress = false;
+
+        // Native HTML5 Audio element for reliable music control (bypasses WADE audio issues)
+        // Use a GLOBAL singleton to ensure only one audio element ever exists
+        if (!window.__DIVINE_GEMS_BG_MUSIC__) {
+            window.__DIVINE_GEMS_BG_MUSIC__ = null;
+        }
+        this.bgMusic = null;
 
         // Music control helper functions
         this.logMusicState = function (context) {
@@ -40,100 +46,157 @@
                 " musicPlaying: " + self.musicPlaying + "," +
                 " musicMuted: " + self.musicMuted + "," +
                 " musicPaused: " + self.musicPaused + "," +
-                " musicSource: " + String(self.musicSource) +
+                " bgMusic: " + (self.bgMusic ? "exists" : "null") +
                 " }");
         };
 
 
         this.stopMusic = function (clearPaused) {
-            console.log("[MUSIC] stopMusic() called");
-            self.logMusicState("BEFORE stopMusic");
+            console.log("  ┌─── stopMusic() ENTER ───");
+            console.log("  │ clearPaused param:", clearPaused);
+            
+            // Use GLOBAL singleton to ensure we can always stop the audio
+            var audio = window.__DIVINE_GEMS_BG_MUSIC__;
+            console.log("  │ Global audio exists:", audio !== null);
+            console.log("  │ Local bgMusic exists:", self.bgMusic !== null);
 
-            // Patch B: stop every known handle
-            if (self.musicHandles && self.musicHandles.length) {
-                for (var i = 0; i < self.musicHandles.length; i++) {
-                    var h = self.musicHandles[i];
-                    try {
-                        console.log("[MUSIC] -> stopAudio(handle):", h, "type:", typeof h);
-                        wade.stopAudio(h);
-                    } catch (e) {
-                        console.log("[MUSIC] -> stopAudio(handle) FAILED:", e);
-                    }
+            if (audio) {
+                console.log("  │ BEFORE pause:");
+                console.log("  │   audio.paused:", audio.paused);
+                console.log("  │   audio.currentTime:", audio.currentTime);
+                try {
+                    console.log("  │ Calling audio.pause()...");
+                    audio.pause();
+                    console.log("  │ pause() done. audio.paused now:", audio.paused);
+                    
+                    console.log("  │ Setting currentTime = 0...");
+                    audio.currentTime = 0;
+                    
+                    console.log("  │ Clearing src and destroying...");
+                    audio.src = '';
+                    window.__DIVINE_GEMS_BG_MUSIC__ = null;
+                    self.bgMusic = null;
+                    
+                    console.log("  │ SUCCESS: Global audio stopped and destroyed");
+                } catch (e) {
+                    console.log("  │ ERROR stopping audio:", e.message);
                 }
-                self.musicHandles.length = 0;
+            } else {
+                console.log("  │ No global audio to stop");
             }
 
-            // Also try stopping by current handle (belt + suspenders)
-            if (self.musicSource !== null && self.musicSource !== undefined) {
-                try { wade.stopAudio(self.musicSource); } catch (e) { }
+            // Also try to stop local reference if different
+            if (self.bgMusic && self.bgMusic !== audio) {
+                console.log("  │ Found orphaned local bgMusic, stopping it too...");
+                try {
+                    self.bgMusic.pause();
+                    self.bgMusic.src = '';
+                    self.bgMusic = null;
+                } catch (e) {}
             }
 
-            // Also try stopping by path (other WADE builds)
-            try {
-                console.log("[MUSIC] -> stopAudio(path):", self.musicFile);
-                wade.stopAudio(self.musicFile);
-                console.log("[MUSIC] -> stopAudio(path) OK");
-            } catch (e) {
-                console.log("[MUSIC] -> stopAudio(path) FAILED:", e);
-            }
-
-            self.musicSource = null;
             self.musicPlaying = false;
+            self._musicStartInProgress = false;
+            
+            if (clearPaused) {
+                self.musicPaused = false;
+            }
 
-            // IMPORTANT: only clear paused on “real stop”
-            if (clearPaused) self.musicPaused = false;
-
-            self.logMusicState("AFTER stopMusic");
+            console.log("  │ FINAL STATE:");
+            console.log("  │   musicPlaying:", self.musicPlaying);
+            console.log("  │   global audio:", window.__DIVINE_GEMS_BG_MUSIC__);
+            console.log("  └─── stopMusic() EXIT ───");
         };
 
-
         this.startMusic = function () {
-            console.log("[MUSIC] startMusic() called");
-            self.logMusicState("BEFORE startMusic");
+            console.log("  ┌─── startMusic() ENTER ───");
+            console.log("  │ musicMuted:", self.musicMuted);
+            console.log("  │ musicPlaying:", self.musicPlaying);
+            console.log("  │ _musicStartInProgress:", self._musicStartInProgress);
+            console.log("  │ Global audio exists:", window.__DIVINE_GEMS_BG_MUSIC__ !== null);
 
-            if (self.musicMuted) {
-                console.log("[MUSIC] -> Music is muted, NOT starting");
-                self.logMusicState("AFTER startMusic");
+            // Guard against double execution from touch+mouse events
+            if (self._musicStartInProgress) {
+                console.log("  │ ABORT: Music start already in progress (double-event guard)");
+                console.log("  └─── startMusic() EXIT (guard) ───");
                 return;
             }
 
+            if (self.musicMuted) {
+                console.log("  │ ABORT: Music is muted, not starting");
+                console.log("  └─── startMusic() EXIT (muted) ───");
+                return;
+            }
+
+            // Check if music is already playing via global singleton
+            if (window.__DIVINE_GEMS_BG_MUSIC__ && !window.__DIVINE_GEMS_BG_MUSIC__.paused) {
+                console.log("  │ ABORT: Global audio already playing");
+                console.log("  └─── startMusic() EXIT (already playing) ───");
+                self.musicPlaying = true;
+                return;
+            }
+
+            self._musicStartInProgress = true;
+            console.log("  │ Set guard: _musicStartInProgress = true");
+
+            console.log("  │ Setting musicPaused = false");
             self.musicPaused = false;
+            
+            console.log("  │ Calling stopMusic(false) to clean up any existing audio...");
+            self.stopMusic(false);
 
-            // hard stop anything that might already be playing
-            self.stopMusic(/*clearPaused*/ false);
+            console.log("  │ Creating new Audio element (global singleton)...");
+            var audio = new Audio(self.musicFile);
+            audio.loop = true;
+            window.__DIVINE_GEMS_BG_MUSIC__ = audio;
+            self.bgMusic = audio;
+            
+            console.log("  │ Audio element created:");
+            console.log("  │   src:", audio.src);
+            console.log("  │   loop:", audio.loop);
 
-            console.log("[MUSIC] -> Calling wade.playAudio (looping)");
-            var h = wade.playAudio(self.musicFile, true);
+            console.log("  │ Calling audio.play()...");
+            var playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(function() {
+                    console.log("  │ PLAY PROMISE RESOLVED - audio playing");
+                    self._musicStartInProgress = false;
+                }).catch(function(e) {
+                    console.log("  │ PLAY PROMISE REJECTED:", e.message);
+                    self._musicStartInProgress = false;
+                });
+            } else {
+                self._musicStartInProgress = false;
+            }
 
-            console.log("[MUSIC] -> playAudio returned:", h, "type:", typeof h);
-
-            self.musicSource = h;
-            self.musicHandles.push(h);     // <--- THIS IS PATCH B
             self.musicPlaying = true;
-
-            self.logMusicState("AFTER startMusic");
+            
+            console.log("  │ FINAL STATE:");
+            console.log("  │   musicPlaying:", self.musicPlaying);
+            console.log("  │   global audio exists:", window.__DIVINE_GEMS_BG_MUSIC__ !== null);
+            console.log("  └─── startMusic() EXIT ───");
         };
-
 
         this.pauseMusic = function () {
             console.log("[MUSIC] pauseMusic() called");
             self.logMusicState("BEFORE pauseMusic");
 
             self.musicPaused = true;
-            self.stopMusic(false); // kill-switch: tries handle AND path
+            if (self.bgMusic) {
+                self.bgMusic.pause();
+                console.log("[MUSIC] -> Native audio paused");
+            }
+            self.musicPlaying = false;
 
             self.logMusicState("AFTER pauseMusic");
         };
-
 
         this.resumeMusic = function () {
             console.log("[MUSIC] resumeMusic() called");
             self.logMusicState("BEFORE resumeMusic");
 
-            // If we got here, we're attempting to come back from a PAUSE
             self.musicPaused = false;
 
-            // Only resume if: game started, not muted, and not already playing
             if (!self.hasStartedGame || self.musicMuted || self.musicPlaying) {
                 console.log("[MUSIC] -> Not resuming (hasStartedGame=" + self.hasStartedGame +
                     ", muted=" + self.musicMuted + ", musicPlaying=" + self.musicPlaying + ")");
@@ -141,15 +204,19 @@
                 return;
             }
 
-            console.log("[MUSIC] -> Restarting looping music");
+            console.log("[MUSIC] -> Resuming looping music");
 
-            // Patch B: store handle so stopMusic can kill it later
-            var h = wade.playAudio(self.musicFile, true);
-            console.log("[MUSIC] -> playAudio returned:", h, "type:", typeof h);
-
-            self.musicSource = h;
-            self.musicHandles.push(h);
-            self.musicPlaying = true;
+            if (self.bgMusic) {
+                var playPromise = self.bgMusic.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(function() {
+                        console.log("[MUSIC] -> Native audio resumed successfully");
+                    }).catch(function(e) {
+                        console.log("[MUSIC] -> Native audio resume failed:", e);
+                    });
+                }
+                self.musicPlaying = true;
+            }
 
             self.logMusicState("AFTER resumeMusic");
         };
@@ -203,12 +270,7 @@
             wade.loadScript('counter.js');
             wade.loadScript('match3.js');
 
-            // Load AUDIO reverted back to old method
-            if (wade.isWebAudioSupported()) {
-                // background music
-                wade.preloadAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', false, true);
-            }
-
+            // Load AUDIO - sound effects only (music uses native HTML5 Audio)
             if (wade.isWebAudioSupported()) {
                 wade.loadAudio('sounds/PowerUp8.ogg');
                 wade.loadAudio('sounds/fiveSound-lion.ogg');
@@ -378,10 +440,8 @@
 
 
                 wade.clearScene();
-                // old method
                 if (!self.musicMuted) {
-                    self.musicPlaying = true;
-                    self.musicSource = wade.playAudio('sounds/Walperion-Music-Ode-to-Victory.ogg', true);
+                    self.startMusic();
                 }
 
 
@@ -812,36 +872,65 @@
             var muteButton = new SceneObject(muteSprite);
             muteButton.removeOnGameOver = true;
             muteButton.onMouseUp = function () {
+                console.log("╔════════════════════════════════════════════════════════════╗");
+                console.log("║         MUSIC MUTE BUTTON - COMPREHENSIVE DEBUG            ║");
+                console.log("╚════════════════════════════════════════════════════════════╝");
+                
+                console.log("[STEP 1] BEFORE state change:");
+                console.log("  - musicMuted (before toggle):", self.musicMuted);
+                console.log("  - musicPlaying:", self.musicPlaying);
+                console.log("  - musicPaused:", self.musicPaused);
+                console.log("  - hasStartedGame:", self.hasStartedGame);
+                console.log("  - bgMusic exists:", self.bgMusic !== null);
+                if (self.bgMusic) {
+                    console.log("  - bgMusic.paused:", self.bgMusic.paused);
+                    console.log("  - bgMusic.currentTime:", self.bgMusic.currentTime);
+                    console.log("  - bgMusic.src:", self.bgMusic.src);
+                    console.log("  - bgMusic.loop:", self.bgMusic.loop);
+                    console.log("  - bgMusic.volume:", self.bgMusic.volume);
+                }
+                
                 self.musicMuted = !self.musicMuted;
-
-                console.log("[BUTTON] ========== MUSIC MUTE BUTTON CLICKED ==========");
-                console.log("[BUTTON] New musicMuted state:", self.musicMuted);
-                self.logMusicState("ON MUTE BUTTON CLICK");
+                console.log("[STEP 2] State toggled - musicMuted is now:", self.musicMuted);
 
                 if (self.musicMuted) {
-                    console.log("[BUTTON] -> MUTING MUSIC (kill switch)");
-                    self.stopMusic();         // stops by handle + by path
-                    self.musicPaused = false; // mute is not "pause"
+                    console.log("[STEP 3] Branch: MUTING (musicMuted=true)");
+                    console.log("[STEP 3a] About to call self.stopMusic()...");
+                    self.stopMusic();
+                    console.log("[STEP 3b] stopMusic() returned");
+                    console.log("[STEP 3c] Setting musicPaused = false");
+                    self.musicPaused = false;
+                    console.log("[STEP 3d] Changing button image to soundOff");
                     muteSprite.setImageFile('images/buttonSoundOff.png');
                 } else {
-                    console.log("[BUTTON] -> UNMUTING MUSIC");
-                    console.log("[BUTTON] -> Checking resume conditions: hasStartedGame=" + self.hasStartedGame +
-                        ", pauseButton.paused=" + pauseButton.paused +
-                        ", musicPaused=" + self.musicPaused);
+                    console.log("[STEP 3] Branch: UNMUTING (musicMuted=false)");
+                    console.log("[STEP 3a] Checking resume conditions:");
+                    console.log("  - hasStartedGame:", self.hasStartedGame);
+                    console.log("  - pauseButton.paused:", pauseButton.paused);
+                    console.log("  - musicPaused:", self.musicPaused);
 
                     if (self.hasStartedGame && !pauseButton.paused) {
-                        console.log("[BUTTON] -> Conditions met, starting music");
-                        self.musicSource = wade.playAudio(self.musicFile, true);
-                        console.log("[MUSIC] -> playAudio returned:", self.musicSource, "type:", typeof self.musicSource);
-                        self.musicPlaying = true;
+                        console.log("[STEP 3b] Conditions MET - calling startMusic()");
+                        self.startMusic();
+                        console.log("[STEP 3c] startMusic() returned");
                     } else {
-                        console.log("[BUTTON] -> Conditions NOT met, not starting music");
+                        console.log("[STEP 3b] Conditions NOT MET - NOT starting music");
                     }
 
+                    console.log("[STEP 3d] Changing button image to soundOn");
                     muteSprite.setImageFile('images/buttonSoundOn.png');
                 }
 
-                self.logMusicState("AFTER MUTE BUTTON HANDLER");
+                console.log("[STEP 4] AFTER handler complete:");
+                console.log("  - musicMuted:", self.musicMuted);
+                console.log("  - musicPlaying:", self.musicPlaying);
+                console.log("  - musicPaused:", self.musicPaused);
+                console.log("  - bgMusic exists:", self.bgMusic !== null);
+                if (self.bgMusic) {
+                    console.log("  - bgMusic.paused:", self.bgMusic.paused);
+                    console.log("  - bgMusic.src:", self.bgMusic.src);
+                }
+                console.log("════════════════════════════════════════════════════════════");
             };
 
 
@@ -876,14 +965,12 @@
             menuObject.removeOnGameOver = true;
             menuObject.onMouseUp = function () {
                 wade.setMainLoopCallback(null, 'update');
-                // old method
-                wade.stopAudio(self.musicSource);
 
                 console.log("[BUTTON] ========== BACK TO MENU BUTTON CLICKED ==========");
                 self.logMusicState("ON MENU BUTTON CLICK");
-                // Stop music when returning to the main menu
-                console.log("[BUTTON] -> Calling stopMusic");
-                self.stopMusic();
+                console.log("[BUTTON] -> Calling stopMusic (with clearPaused=true)");
+                self.stopMusic(true);
+                self.hasStartedGame = false;
 
                 // Resume simulation if paused before clearing scene
                 if (pauseButton.paused) {
@@ -906,12 +993,9 @@
             console.log("[GAME] ========== GAME OVER ==========");
             self.logMusicState("ON GAME OVER");
             this.gameOver = false;
-            // older method 
-            self.musicPlaying = false;
-            wade.stopAudio(self.musicSource);
-            // Force music to stop (playing or not)
-            console.log("[GAME] -> Calling stopMusic");
-            self.stopMusic();
+            console.log("[GAME] -> Calling stopMusic (with clearPaused=true)");
+            self.stopMusic(true);
+            self.hasStartedGame = false;
 
             // Create explosion sound
             if (!wade.app.soundMuted) {
