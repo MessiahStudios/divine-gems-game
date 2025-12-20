@@ -67,7 +67,7 @@ Match3 = function()
         parameters && parameters.match3 && parameters.match3.matchSound && (this.matchSound = parameters.match3.matchSound);
         parameters && parameters.match3 && parameters.match3.explosionSound && (this.explosionSound = parameters.match3.explosionSound);
         parameters && parameters.match3 && parameters.match3.specialFiveSound && (this.specialFiveSound = parameters.match3.specialFiveSound);
-	parameters && parameters.match3 && parameters.match3.specialFiveLionsAtWAR && (this.specialFiveLionsAtWAR = parameters.match3.specialFiveLionsAtWAR);
+        parameters && parameters.match3 && parameters.match3.specialFiveLionsAtWAR && (this.specialFiveLionsAtWAR = parameters.match3.specialFiveLionsAtWAR);
         parameters && parameters.match3 && parameters.match3.explosionAnimation && (this.explosionAnimation = parameters.match3.explosionAnimation);
         parameters && parameters.match3 && parameters.match3.sparkleAnimation && (this.sparkleAnimation = parameters.match3.sparkleAnimation);
         parameters && parameters.match3 && parameters.match3.splashAnimation && (this.splashAnimation = parameters.match3.splashAnimation);
@@ -130,7 +130,8 @@ Match3 = function()
     var wholeBoardCheck = false;
     var matchSoundPlaying = false;
     var explosionSoundPlaying = false;
-	var specialFiveSoundPlaying = false;
+    var specialFiveSoundPlaying = false;
+    var lionsAtWarActive = false; // Prevents match checking during Lions at War effect
 
     /**
      * Set's which cell the selector icon should appear over
@@ -376,17 +377,26 @@ Match3 = function()
  * @param {boolean} check check for matches once the swap is complete
  */
 var swap = function(square1, square2, checkForMatches) {
+    console.log("[SWAP] Called with:", {
+        square1: square1 ? { type: square1.type, isSpecialFive: square1.isSpecialFive, col: square1.col, row: square1.row } : null,
+        square2: square2 ? { type: square2.type, isSpecialFive: square2.isSpecialFive, col: square2.col, row: square2.row } : null
+    });
+    
     if (!square1 || !square2 || columnsLocked[square1.col] || columnsLocked[square2.col]) {
+        console.log("[SWAP] Blocked - null squares or columns locked");
         return false;
     }
 
     // Only try to swap if selected squares are adjacent
     if (!adjacent(square1, square2)) {
+        console.log("[SWAP] Blocked - squares not adjacent");
         return false;
     }
 
     // Check if both squares are specialFive
+    console.log("[SWAP] Checking specialFive:", { sq1_isSpecialFive: square1.isSpecialFive, sq2_isSpecialFive: square2.isSpecialFive });
     if (square1.isSpecialFive && square2.isSpecialFive) {
+        console.log("[SWAP] BOTH ARE LIONS! Calling handleSpecialFiveInteraction...");
         handleSpecialFiveInteraction(square1, square2);
         return true;
     }
@@ -498,13 +508,24 @@ var swap = function(square1, square2, checkForMatches) {
      * @param {Object} square2 The second specialFive square
      */
     var handleSpecialFiveInteraction = function(square1, square2) {
+        console.log("[LIONS AT WAR] handleSpecialFiveInteraction ENTERED!");
+        console.log("[LIONS AT WAR] square1:", square1 ? { type: square1.type, isSpecialFive: square1.isSpecialFive } : null);
+        console.log("[LIONS AT WAR] square2:", square2 ? { type: square2.type, isSpecialFive: square2.isSpecialFive } : null);
+        
+        // Set flag to prevent match checking during the effect
+        lionsAtWarActive = true;
+        console.log("[LIONS AT WAR] lionsAtWarActive = true");
+        
         // Lock all columns
         for (var i = 0; i < columnsLocked.length; i++) {
             columnsLocked[i] = true;
         }
+        console.log("[LIONS AT WAR] All columns locked");
 
         // Play the unique sound effect for the specialFive interaction
+        console.log("[LIONS AT WAR] Sound check - soundMuted:", wade.app.soundMuted, "specialFiveLionsAtWAR:", self.specialFiveLionsAtWAR);
         if (!wade.app.soundMuted && self.specialFiveLionsAtWAR) {
+            console.log("[LIONS AT WAR] Playing sound:", self.specialFiveLionsAtWAR);
             wade.playAudioIfAvailable(self.specialFiveLionsAtWAR);
         }
 
@@ -513,48 +534,84 @@ var swap = function(square1, square2, checkForMatches) {
         var centerY = (square1.getPosition().y + square2.getPosition().y) / 2;
 
         // Remove all game pieces and trigger the existing specialFive beam effect for each
-        var delay = 0;
-        var delayIncrement = 50; // Adjust this value to change the speed of the cascade
+        var maxDelay = 0;
+        var delayIncrement = 0.5; // Much faster - was 50, now 0.5 for snappy cascade
+        var piecesToRemove = [];
 
+        console.log("[LIONS AT WAR] Starting cascade effect...");
+        
+        // First, collect all pieces and calculate delays
         for (var i = 0; i < self.numCells.x; i++) {
             for (var j = 0; j < self.numCells.y; j++) {
                 var piece = board[i][j];
                 if (piece) {
                     // Calculate distance from center to determine delay
                     var distance = Math.sqrt(Math.pow(piece.getPosition().x - centerX, 2) + Math.pow(piece.getPosition().y - centerY, 2));
-                    delay = distance * delayIncrement;
-
-                    setTimeout((function(p) {
-                        return function() {
-                            p.remove = true;
-                            check.push(p);
-
-                            // Create the beam effect for this piece
-                            p.fivePos = { x: centerX, y: centerY }; // Set the beam origin to the swap center
-                            createBeam(p);
-
-                            // Play a sound for each piece (optional)
-                            if (!wade.app.soundMuted && self.specialFiveSound) {
-                                wade.playAudioIfAvailable(self.specialFiveSound);
-                            }
-                        };
-                    })(piece), delay);
+                    var pieceDelay = distance * delayIncrement;
+                    
+                    // Track maximum delay for proper unlock timing
+                    if (pieceDelay > maxDelay) {
+                        maxDelay = pieceDelay;
+                    }
+                    
+                    piecesToRemove.push({ piece: piece, delay: pieceDelay, col: i, row: j });
                 }
             }
         }
+        
+        console.log("[LIONS AT WAR] Pieces to remove:", piecesToRemove.length, "Max delay:", maxDelay);
 
+        // Now animate each piece removal
+        for (var k = 0; k < piecesToRemove.length; k++) {
+            (function(item) {
+                setTimeout(function() {
+                    if (item.piece) {
+                        // Create the beam effect for this piece
+                        item.piece.fivePos = { x: centerX, y: centerY };
+                        createBeam(item.piece);
+                        
+                        // Actually remove the scene object from WADE
+                        wade.removeSceneObject(item.piece);
+                        
+                        // Clear the board position
+                        board[item.col][item.row] = null;
+                    }
+                }, item.delay);
+            })(piecesToRemove[k]);
+        }
+        
+        // Play sound once for the effect
+        if (!wade.app.soundMuted && self.specialFiveSound) {
+            wade.playAudioIfAvailable(self.specialFiveSound);
+        }
+
+        console.log("[LIONS AT WAR] Scheduled piece removals, waiting for completion...");
+        
         // Trigger any necessary game events or score updates
         wade.app.onSpecialFiveInteraction && wade.app.onSpecialFiveInteraction();
 
-        // Schedule the board refill
+        // Schedule the board refill - use maxDelay to ensure all pieces finish first
         setTimeout(function() {
+            console.log("[LIONS AT WAR] Unlocking columns and refilling board...");
+            
+            // Clear the check array to prevent issues
+            check.length = 0;
+            
+            // Unlock all columns (pieces were already removed during cascade)
             for (var i = 0; i < self.numCells.x; i++) {
                 columnsLocked[i] = false;
             }
+            
+            // Now re-enable match checking and refill
+            lionsAtWarActive = false;
+            console.log("[LIONS AT WAR] lionsAtWarActive = false");
+            
+            // Force board refill
             update();
-        }, delay + 1000); // Adjust the delay as needed
+            console.log("[LIONS AT WAR] Board refill complete!");
+        }, maxDelay + 500); // Wait for all pieces to animate + small buffer
     };
-	
+        
     /**
      * A function that determines if 2 squares are adjacent
      * @param {square} square1 first square
@@ -577,6 +634,11 @@ var swap = function(square1, square2, checkForMatches) {
      */
     var getMatches = function(square, flagAsMatched)
     {
+        // Skip match checking during Lions at War effect
+        if (lionsAtWarActive) {
+            return false;
+        }
+        
         if(columnsLocked[square.col])
         {
             return false;
@@ -868,6 +930,11 @@ var swap = function(square1, square2, checkForMatches) {
      */
     var update = function()
     {
+        // Skip all processing during Lions at War effect
+        if (lionsAtWarActive) {
+            return;
+        }
+        
         // Play sounds
         // Create explosion sound
         if(matchSoundPlaying && !wade.app.soundMuted && self.matchSound)
@@ -879,14 +946,14 @@ var swap = function(square1, square2, checkForMatches) {
         {
             wade.playAudioIfAvailable(self.explosionSound);
         }
-		//Create special 5 sound
-		if(specialFiveSoundPlaying && !wade.app.soundMuted && self.specialFiveSound)
-		{
-			wade.playAudioIfAvailable(self.specialFiveSound);
-		}
+                //Create special 5 sound
+                if(specialFiveSoundPlaying && !wade.app.soundMuted && self.specialFiveSound)
+                {
+                        wade.playAudioIfAvailable(self.specialFiveSound);
+                }
         matchSoundPlaying = false;
         explosionSoundPlaying = false;
-		specialFiveSoundPlaying = false;
+                specialFiveSoundPlaying = false;
 
         var removalList = [];
 
