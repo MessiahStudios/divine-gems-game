@@ -348,6 +348,9 @@
                     clearInterval(loadingInterval);
                     wade.setLoadingBar(false);  // Hide the loading bar
                     document.getElementById('__wade_loading_bar').style.display = 'none';
+                    try {
+                        window.dispatchEvent(new CustomEvent('divinegems-assets-ready'));
+                    } catch (ignore) { }
                     self.init();  // Proceed to game initialization
                 }
             }, 100);  // Check every 100ms
@@ -391,6 +394,9 @@
          * Creates the main menu
          */
         this.game = function () {
+            try {
+                window.dispatchEvent(new CustomEvent('divinegems-returned-to-menu'));
+            } catch (ignore) { }
             // Create menu graphical elements
             var backgroundSprite = new Sprite('images/menuBackground.png', this.layers.boardBack);
             var menu = new SceneObject(backgroundSprite);
@@ -425,6 +431,9 @@
                     return;
                 }
                 self.hasStartedGame = true;
+                try {
+                    window.dispatchEvent(new CustomEvent('divinegems-gameplay-started'));
+                } catch (ignore) { }
                 // Initialize AudioContext when the play button is clicked
                 console.log("[BUTTON] Play button clicked - starting game, musicMuted:", self.musicMuted, "musicPlaying:", self.musicPlaying);
                 if (!self.audioContext || self.audioContext.state === 'suspended') {
