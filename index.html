@@ -4,7 +4,9 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"/>
+    <meta name="theme-color" content="#0b1220" />
     <link rel="icon" href="favicon.ico">
     <link rel="stylesheet" type="text/css" href="style.css" />
     <title>Messiah Studios | Divine Gems</title>
@@ -12,20 +14,22 @@
     <!-- Link to the manifest.json file -->
     <link rel="manifest" href="manifest.json">
 
-    <!-- Register service worker for offline capabilities -->
+    <!-- Register service worker (scope = app directory; works on GitHub Pages and localhost) -->
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/divine-gems-game/service-worker.js')
-            .then(registration => {
-                console.log('Service Worker registered with scope:', registration.scope);
-            })
-            .catch(error => {
-                console.error('Service Worker registration failed:', error);
-            });
+            var swUrl = new URL('service-worker.js', document.baseURI).href;
+            var swScope = new URL('./', document.baseURI).href;
+            navigator.serviceWorker.register(swUrl, { scope: swScope })
+                .then(function (registration) {
+                    console.log('Service Worker registered with scope:', registration.scope);
+                })
+                .catch(function (error) {
+                    console.error('Service Worker registration failed:', error);
+                });
         }
     </script>
 
-    <script src="https://code.jquery.com/jquery-2.0.3.min.js"></script>
+    <script src="jquery-1.11.1.min.js"></script>
     <script src="wade_1.5.js"></script>
     <script src="wade.ifx_1.0.js"></script>
     <script src="wade.particles_1.0.1.js"></script>
@@ -38,11 +42,23 @@
 
 <body>
     
-    <div id="container" style="border:0; width:800px; height:600px;">
-        <div id="wade_main_div" width="800" height="600" tabindex="1"></div>
+    <div id="container" class="game-root">
+        <div id="wade_main_div" width="800" height="600" tabindex="0" aria-label="Game"></div>
     </div>
 
     <div id="chromeFix">.</div>
     <div id="chromeFix2">.</div>
+
+    <footer id="footer" role="contentinfo" aria-label="Install app" style="display: none;">
+        <div id="footerInstallRow">
+            <p id="footerInstallHint" class="footer-install-hint" style="display: none;" role="status" aria-live="polite"></p>
+            <div id="footerInstallActions" class="footer-install-actions" style="display: none;">
+                <button type="button" id="footerInstallButton" style="display: none;">Install Divine Gems</button>
+                <button type="button" id="footerNotNowInstall" style="display: none;">Not now</button>
+            </div>
+            <button type="button" id="footerDismissInstallHint" style="display: none;">Dismiss</button>
+        </div>
+    </footer>
+    <script src="install.js"></script>
 </body>
 </html>
