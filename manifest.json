@@ -1,8 +1,8 @@
 {
-  "id": "/divine-gems-game/",
   "name": "Divine Gems",
   "short_name": "Gems",
-  "start_url": "/divine-gems-game/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#ffffff",
@@ -12,13 +12,13 @@
       "src": "images/divineGemsTitle_padded_192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
       "src": "images/divineGemsTitle_padded_512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     }
   ],
   "description": "Divine Gems is a single-level match-3 puzzle game where players can extend their playtime by making more matches. Matching 5 gems creates a lion that roars, destroying the selected gem. Suitable for kids during church service or adults needing a brain break."
