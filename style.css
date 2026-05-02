@@ -14,7 +14,20 @@ html, body
     background: #000;
     -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
     -ms-touch-action: none;
-	background-color:grey;
+	background-color: #0b1220;
+}
+
+.game-root {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100vw;
+    height: 100%;
+    max-height: 100vh;
+    margin: 0 auto;
+    position: relative;
+    border: 0;
+    padding: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 #wade_main_div
@@ -68,24 +81,128 @@ footer {
     position: fixed;
     bottom: 0;
     left: 0;
+    right: 0;
     width: 100%;
-    background-color: #333;
-    color: white;
+    max-width: 100vw;
+    margin: 0 auto;
+    box-sizing: border-box;
+    background: linear-gradient(180deg, rgba(18, 28, 42, 0.92) 0%, rgba(8, 12, 20, 0.98) 100%);
+    color: #e8eef5;
     text-align: center;
-    padding: 10px 0;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0));
     z-index: 9998;
-    pointer-events: none; /* Ensure interactions pass through footer */
+    pointer-events: none;
+    border-top: 1px solid rgba(63, 183, 227, 0.35);
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+#footerInstallRow {
+    pointer-events: all;
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 0 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-install-actions {
+    display: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px 14px;
 }
 
 #footerInstallButton {
     display: none;
-    background-color: #007bff;
-    color: #fff;
+    touch-action: manipulation;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 44px;
     padding: 10px 20px;
+    background: linear-gradient(180deg, #2a9fd6 0%, #1a7aad 100%);
+    color: #fff;
     border: none;
-    border-radius: 5px;
+    border-radius: 10px;
     cursor: pointer;
-    pointer-events: all;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+#footerInstallButton:hover {
+    filter: brightness(1.08);
+}
+
+#footerInstallButton:active {
+    transform: scale(0.98);
+}
+
+#footerNotNowInstall {
+    display: none;
+    touch-action: manipulation;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px 18px;
+    background: transparent;
+    color: #9db4c8;
+    border: 1px solid rgba(157, 180, 200, 0.45);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+#footerNotNowInstall:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+#footerInstallButton:focus-visible,
+#footerNotNowInstall:focus-visible,
+#footerDismissInstallHint:focus-visible {
+    outline: 2px solid #3fb7e3;
+    outline-offset: 2px;
+}
+
+.footer-install-hint {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+    color: #dce6ef;
+    max-width: 36rem;
+}
+
+#footerDismissInstallHint {
+    display: none;
+    touch-action: manipulation;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 8px 18px;
+    background: transparent;
+    color: #9db4c8;
+    border: 1px solid rgba(157, 180, 200, 0.35);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#footerDismissInstallHint:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 /* Loading Screen Styles */
@@ -170,3 +287,21 @@ footer {
         height: auto;
         padding: 10px;
     }
+
+    .footer-install-hint {
+        font-size: 13px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #footerInstallButton,
+    #footerNotNowInstall {
+        transition: none;
+    }
+
+    .spinner {
+        animation: none;
+        border-top-color: rgba(255, 255, 255, 0.5);
+    }
+}
+
